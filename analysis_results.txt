@@ -1,0 +1,68 @@
+Instructions for Running the ETL Script
+Run the script using the following command, replacing the placeholders with your actual database credentials and file paths:
+python etl_script.py --username <your_username> --password <your_password> --host <your_host> --port 5432 --db_name postgres --directory_name 5k_borrowers_data.csv --schema_name public --table_name borrowers
+
+Make sure to have the required packages installed:
+pip install pandas sqlalchemy psycopg2 argparse
+
+
+# SQL Queries and results ->
+
+-- 1
+select AVG(loan_amount) as average_loan_amount
+from public.borrowers
+where days_left_to_pay_current_emi > 5 and delayed_payment = 'Yes';
+
+-- Result = 55252
+-- The average loan amount for borrowers who are more than 5 days past due.
+
+
+-- 2
+select Name,
+       (loan_amount - (emi * loan_term)) as outstanding_balance
+from public.borrowers
+order by outstanding_balance desc
+limit 10;
+
+--Name	        Outstanding_Balance
+--Jayant Bhandari	-108.01
+--Riaan Bhargava	-122.31
+--Prisha Char	    -149.79
+--Ivan Keer	        -152.70
+--Ira Varty	        -156.64
+--Riaan Lalla	    -158.91
+--Urvi Virk     	-161.40
+--Yasmin Divan	    -163.69
+--Kiara Kurian	    -166.93
+--Bhavin Bala	    -168.79
+
+-- The top 10 borrowers with the highest outstanding balance
+
+
+-- 3
+select *
+from public.borrowers
+where Delayed_Payment = 'No';
+
+-- 2,496 records with good repayment history
+
+
+-- 4
+select loan_purpose,
+       AVG(loan_amount) as average_loan_amount,
+       SUM(loan_amount) as total_loan_amount,
+       COUNT(*) as loan_count,
+       AVG(interest_rate) as average_interest_rate
+from public.borrowers
+group by loan_purpose;
+
+--Loan Purpose	average_loan_amount	total_loan_amount	loan_count	average_interest_rate
+--Debt Consolidation	55,704.98	    56,819,078	      1,020	             0.1999
+--Education Fees	    56,063.98	    59,035,373	     1,053	            0.2023
+--Home Renovation	    54,320.20	    51,930,114	     956	            0.2024
+--Medical Emergency 	54,787.69	    53,746,719	     981	            0.2011
+--Wedding Expenses	    55,490.03	    54,935,134	        990	            0.1977
+
+-- This analysis provides insights into the loan distribution and interest rates associated with different loan types.
+
+
